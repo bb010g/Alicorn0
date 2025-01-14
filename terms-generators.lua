@@ -1123,9 +1123,10 @@ local function declare_set(key_type)
 end
 declare_set = U.memoize(declare_set, false)
 
----@class ArrayType: Type
+---@class ArrayType<V: Type>: Type
 ---@overload fun(...): ArrayValue
 ---@field value_type Type
+---@field value_type V
 ---@field methods { [string]: function }
 ---@field new fun(self: ArrayType, array: Value[], first?: integer, last?: integer): ArrayValue
 ---@field unchecked_new fun(self: ArrayType, array: Value[], n?: integer): ArrayValue
@@ -1480,8 +1481,9 @@ local function array_freeze(t, val)
 end
 
 ---@param self table
----@param value_type Type
+---@param value_type ValueType
 ---@return ArrayType self
+---@return ArrayType<ValueType> self
 local function define_array(self, value_type)
 	if type(value_type) ~= "table" or type(value_type.value_check) ~= "function" then
 		error(
