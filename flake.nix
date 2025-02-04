@@ -134,6 +134,36 @@
                   ${lib.escapeShellArg (lib.getExe luvit)} ${lib.escapeShellArg file}
                 '')
                 { };
+              devfiler = pkgsFinal.callPackage
+                ({ appimageTools, fetchzip, lib, runCommand, ... }: appimageTools.wrapAppImage rec {
+                  pname = "devfilter";
+                  version = "0.9.0";
+
+                  src = passthru.appimageContents;
+
+                  passthru = {
+                    archiveSrc = (fetchzip {
+                      pname = "devfiler-archive";
+                      version = "0.9.0";
+                      url = "https://upload.elastic.co/d/f8aa0c386baa808a616ca29f86b34c726edb5af36f8840a4cf28468ad534a4b5";
+                      extension = "tar.gz";
+                      hash = "sha256-faAF9m7u/I7JuwyT0mRSgzEcj/ZdwJxvYhVFPCfZrN4=";
+                      stripRoot = false;
+                    }).overrideAttrs (finalAttrs': prevAttrs': {
+                      authorizationToken = "2635c0750bf8ea69";
+                      curlOptsList = prevAttrs'.curlOptsList or "" + '' '-H' "Authorization: ''${authorizationToken}"'';
+                    });
+                    appimageSrc = runCommand "devfilter-appimage-${passthru.archiveSrc.version}.AppImage" { src = passthru.archiveSrc; } ''
+                      install -Dm 744 -T "$src/devfiler-appimage-x86_64.AppImage" "$out"
+                    '';
+                    appimageContents = appimageTools.extract {
+                      pname = "devfilter-appimage";
+                      version = passthru.archiveSrc.version;
+                      src = passthru.appimageSrc;
+                    };
+                  };
+                })
+                { };
               luajit_lua5_2 = pkgsFinal.luajit.override { enable52Compat = true; self = pkgsFinal.luajit_lua5_2; };
               luajitLua52Packages = pkgsFinal.recurseIntoAttrs pkgsFinal.luajit_lua5_2.pkgs;
             })
