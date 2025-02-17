@@ -2362,6 +2362,7 @@ return function(args)
 	flex_runtime_context_type = args.flex_runtime_context_type
 	DescCons = args.DescCons
 	return {
+		PrettyprintingContext = PrettyprintingContext,
 		checkable_term_override_pretty = checkable_term_override_pretty,
 		unanchored_inferrable_term_override_pretty = unanchored_inferrable_term_override_pretty,
 		typed_term_override_pretty = typed_term_override_pretty,

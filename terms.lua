@@ -2168,6 +2168,7 @@ local terms = {
 }
 
 local override_prettys = require "terms-pretty"(terms)
+terms.PrettyprintingContext = override_prettys.PrettyprintingContext
 local checkable_term_override_pretty = override_prettys.checkable_term_override_pretty
 local unanchored_inferrable_term_override_pretty = override_prettys.unanchored_inferrable_term_override_pretty
 local typed_term_override_pretty = override_prettys.typed_term_override_pretty
