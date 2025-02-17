@@ -77,7 +77,7 @@ typed_term_glsl.literal = {
 	end,
 }
 
-local function access_application(self, subject, index, pp, varnames)
+local function access_application(self, subject, index, pp, context)
 	if index ~= 1 then
 		return glsl_print_fallback(self, pp)
 	end
@@ -100,14 +100,14 @@ local function access_application(self, subject, index, pp, varnames)
 	local elements = arg:unwrap_host_tuple_cons()
 
 	pp:_enter()
-	print_f(pp, varnames, elements:unpack())
+	print_f(pp, context, elements:unpack())
 	pp:_exit()
 end
 
-local function access_variable(self, subject, index, pp, varnames)
+local function access_variable(self, subject, index, pp, context)
 	local var_index, debug = subject:unwrap_bound_variable()
 
-	local var = varnames[var_index]
+	local var = context[var_index]
 	if not var then
 		return glsl_print_fallback(self, pp)
 	end
@@ -166,14 +166,14 @@ local function glsl_check_variable(self, subject, index, check)
 end
 
 typed_term_glsl.tuple_element_access = {
-	print = function(self, pp, varnames)
+	print = function(self, pp, context)
 		local subject, index = self:unwrap_tuple_element_access()
 
 		if subject:is_application() then
-			return access_application(self, subject, index, pp, varnames)
+			return access_application(self, subject, index, pp, context)
 		end
 		if subject:is_bound_variable() then
-			return access_variable(self, subject, index, pp, varnames)
+			return access_variable(self, subject, index, pp, context)
 		end
 		return glsl_print_fallback(self, pp)
 	end,
