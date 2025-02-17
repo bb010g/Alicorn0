@@ -764,7 +764,7 @@ function typed_term_override_pretty:bound_variable(pp, context)
 
 	pp:_enter()
 
-	print(tostring(context))
+	-- print(tostring(context))
 	local context_name = context:get_spanned_name(index)
 	if name ~= context_name then
 		pp:unit(pp:set_color())

@@ -305,7 +305,7 @@ let ternary = lambda (condition : wgpu-bool, consequent : wgpu-float, alternate 
 let host-fwidth = intrinsic
 	""""
 		-- This returns the derivative of the values relative to the current surface dimensions, which is not possible to do here
-		local host_fwidth = function(v) return 1.0	end
+		local host_fwidth = function(v) return 1.0 end
 		glsl_registry[host_fwidth] = function(pp, context, v)
 			pp:unit("fwidth(")
 			pp:any(v, context)

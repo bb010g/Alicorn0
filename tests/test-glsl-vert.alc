@@ -5,9 +5,15 @@ let glsl-print-vert-shader = intrinsic
 		local U = require "alicorn-utils"
 		return function(vert_shader)
 			local param_name, code, capture, _capture_dbg, _param_debug = vert_shader:unwrap_closure()
-			local elements = code:unwrap_tuple_cons()
-			local glpos = elements[1]:glsl_print({{}, {"MVP", "PosDim", "vPos"}})
-			local pos = elements[2]:glsl_print({{}, {"MVP", "PosDim", "vPos"}})
+			local elements, element_names = code:unwrap_tuple_cons()
+			local context = terms.PrettyprintingContext.new()
+			for _, name in ipairs({"MVP", "PosDim", "vPos"}) do
+				context = context:append(name)
+			end
+			local glpos_term = elements[1]
+			local glpos = glpos_term:glsl_print(context)
+			local pos_term = elements[2]
+			local pos = pos_term:glsl_print(context)
 			local boilerplate = "#version 450\nlayout(binding=0) uniform mat4 MVP;\nlayout(binding=1) uniform vec4 PosDim;\nin vec2 vPos;\nout vec2 pos;\n"
 			local vert_shader = boilerplate .. "void main() {\n  gl_Position = " .. glpos .. ";\n  pos = " .. pos .. ";\n}\n"
 			return U.litprint(vert_shader)

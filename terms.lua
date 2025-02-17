@@ -2197,7 +2197,7 @@ strict_continuation:derive(derivers.pretty_print)
 stuck_continuation:derive(derivers.pretty_print)
 
 local glsl_print = require "glsl-print"
-typed_term:derive(glsl_print.glsl_print_deriver, glsl_print.typed_term_glsl)
+typed_term:derive(glsl_print.glsl_print_deriver, glsl_print.typed_term_override_glsl_print)
 local pretty_printer = require "pretty-printer"
 typed_term.methods.glsl_print = pretty_printer.glsl_print
 

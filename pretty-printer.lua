@@ -32,7 +32,8 @@ end
 ---@param ... any
 function PrettyPrint:any(unknown, ...)
 	if self.opts.glsl_print then
-		return glsl_print.glsl_print(self, unknown, ...)
+		glsl_print.glsl_print(self, unknown, ...)
+		return
 	end
 	local ty = type(unknown)
 	if ty == "string" then
@@ -361,9 +362,9 @@ local function default_print(unknown, ...)
 	return tostring(pp)
 end
 
-local function glsl_print(unknown, ...)
+local function glsl_print_fun(unknown, context)
 	local pp = PrettyPrint:new({ glsl_print = true })
-	pp:any(unknown, ...)
+	pp:any(unknown, context)
 	return tostring(pp)
 end
 
@@ -390,7 +391,7 @@ return {
 	pretty_preprint = pretty_preprint,
 	pretty_print = pretty_print,
 	default_print = default_print,
-	glsl_print = glsl_print,
+	glsl_print = glsl_print_fun,
 	s = s,
 	p = p,
 	hidden_fields = hidden_fields,
