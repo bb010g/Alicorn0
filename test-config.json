@@ -1,71 +1,72 @@
 {
 	"modules": {
 		"prelude": {
-			"path": "prelude.alc"
+			"path": "prelude.alc",
+			"only_load_once": true
 		},
 		"tests.arith": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/arith.alc"
 		},
 		"tests.bad-types": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"failure_point": "termgen",
 			"path": "tests/bad-types.alc"
 		},
 		"tests.basic-annotated": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/basic-annotated.alc"
 		},
 		"tests.functypes": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/functypes.alc"
 		},
 		"tests.host-if": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/host-if.alc"
 		},
 		"tests.host-prog": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/host-prog.alc"
 		},
 		"tests.host-to-func": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/host-to-func.alc"
 		},
 		"tests.http-server": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/http-server.alc"
 		},
 		"tests.implicit": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/implicit.alc"
 		},
 		"tests.operative-do": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/operative-do.alc"
 		},
 		"tests.operative-tuple-desc": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/operative-tuple-desc.alc"
@@ -77,33 +78,33 @@
 			"path": "tests/record-usage.alc"
 		},
 		"tests.switch-fail": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"failure_point": "termgen",
 			"path": "tests/switch-fail.alc"
 		},
 		"tests.switch-test": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/switch-test.alc"
 		},
 		"tests.test-failure": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"failure_point": "termgen",
 			"path": "tests/test-failure.alc"
 		},
 		"tests.test-success": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/test-success.alc"
 		},
 		"tests.tuples": {
-			"using": [
+			"loads": [
 				"prelude"
 			],
 			"path": "tests/tuples.alc"

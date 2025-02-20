@@ -188,13 +188,14 @@ if profile_run then
 end
 
 ---@class (exact) runtest.test_config
----@field modules {path: runtest.test_config.module}
+---@field modules {[string]: runtest.test_config.module}
 ---@field tests string[]
 
 ---@class (exact) runtest.test_config.module
 ---@field failure_point? failure_point
 ---@field path string
----@field using? string[]
+---@field loads? string[]
+---@field only_load_once boolean?
 
 local test_config_file, err = io.open("test-config.json")
 if not test_config_file then
@@ -206,120 +207,46 @@ if err ~= nil then
 end
 ---@cast test_config runtest.test_config
 
----@type {[string]: true}
-local explicit_test_set = {}
-if explicit_tests then
-	local test_modules = test_config.modules
-	for _, explicit_test in ipairs(explicit_tests) do
-		local test_module = test_modules[explicit_test]
-		if test_module == nil then
-			error(("unknown module explicitly requested: %s"):format(explicit_test))
-		end
-		explicit_test_set[explicit_test] = true
-	end
-end
+---@alias runtest.module_load_analysis {[string]: string[]}
 
----@private
----@class (exact) runtest._module_tree
----@field name string
----@field child_names string[]
----@field ancestors {[string]: integer}
----@field explicit boolean
-
----@type {[string]: runtest._module_tree}
-local module_trees = {}
----@type string[]
-local module_forest = {}
-do
-	local test_modules = test_config.modules
-	---@type runtest._module_tree[]
-	local queued_module_trees = {}
+---@param modules_config {[string]: runtest.test_config.module}
+---@return runtest.module_load_analysis module_load_analysis
+local function analyze_module_loads(modules_config)
+	local ipairs, table_insert = ipairs, table.insert
+	---@type {[string]: true}
+	local loaded_once = {}
+	---@param tip_module_name (nil | string)
 	---@param module_name string
-	---@param explicit boolean
-	---@return runtest._module_tree module_tree
-	local function add_module(module_name, explicit)
-		local module_tree = { name = module_name, child_names = {}, ancestors = {}, explicit = explicit }
-		module_trees[module_name] = module_tree
-		table.insert(queued_module_trees, module_tree)
-		return module_tree
-	end
-	if explicit_tests ~= nil then
-		for _, explicit_test in ipairs(explicit_tests) do
-			add_module(explicit_test, true)
+	local function analyze_module_loads_aux(tip_module_name, module_name)
+		if tip_module_name == module_name then
+			error(("module loading cycle detected for %s"):format(tip_module_name))
+		elseif tip_module_name == nil then
+			tip_module_name = module_name
 		end
-	else
-		for _, test in ipairs(test_config.tests) do
-			add_module(test, true)
+		local module_config = modules_config[module_name]
+		if module_config == nil then
+			error(("unknown module requested for %s: %s"):format(tip_module_name, module_name))
 		end
-	end
-	for _, module_tree in ipairs(queued_module_trees) do
-		local module_name = module_tree.name
-		local module = test_modules[module_name]
-		if module == nil then
-			error(("unknown module requested: %s"):format(module_name))
+		local module_loads = module_config.loads
+		if module_loads == nil then
+			module_loads = {}
 		end
-		local module_using = module.using
-		local is_root_module = module_using == nil or #module_using == 0
-		if is_root_module then
-			table.insert(module_forest, module_name)
+		if loaded_once[module_name] then
+			for _, loaded_module_name in ipairs(module_loads) do
+				analyze_module_loads_aux(tip_module_name, loaded_module_name)
+			end
 		else
-			---@cast module_using -nil
-			for _, used_module_name in ipairs(module_using) do
-				local used_module_tree = module_trees[used_module_name]
-				if used_module_tree == nil then
-					used_module_tree = add_module(used_module_name, false)
-				end
-				table.insert(used_module_tree.child_names, module_name)
-				module_tree.ancestors[used_module_name] = (module_tree.ancestors[used_module_name] or 0) + 1
-				print(module_name, "ancestor", module_tree.ancestors[used_module_name], used_module_name)
+			if module_config.only_load_once then
+				loaded_once[module_name] = true
 			end
-		end
-	end
-	---@param module_tree runtest._module_tree
-	local function record_ancestors(module_tree)
-		if module_tree.ancestors[module_tree.name] ~= nil then
-			error(
-				("module cycle found: %s, ancestors %s"):format(
-					module_tree.name,
-					pretty_printer.s(module_tree.ancestors)
-				)
-			)
-		end
-		local i = 1
-		while i <= #module_tree.child_names do
-			for ancestor_module_name, _ in pairs(module_tree.ancestors) do
-				module_trees[module_tree.child_names[i]].ancestors[ancestor_module_name] = (
-					module_trees[module_tree.child_names[i]].ancestors[ancestor_module_name] or 0
-				) + 1
-				print(
-					module_tree.child_names[i],
-					"ancestor",
-					module_trees[module_tree.child_names[i]].ancestors[ancestor_module_name],
-					ancestor_module_name
-				)
+			for _, loaded_module_name in ipairs(module_loads) do
+				analyze_module_loads_aux(tip_module_name, loaded_module_name)
 			end
-			-- module_trees[module_tree.child_names[i]].ancestors[module_tree.name] = (module_trees[module_tree.child_names[i]].ancestors[module_tree.name] or 0) + 1
-			-- print(module_tree.child_names[i], "ancestor", module_trees[module_tree.child_names[i]].ancestors[module_tree.name], module_tree.name)
-			record_ancestors(module_trees[module_tree.child_names[i]])
-			i = i + 1
+			table_insert(module_load_analysis[tip_module_name], module_name)
 		end
 	end
-	for _, module_name in ipairs(module_forest) do
-		record_ancestors(module_trees[module_name])
-	end
-	local function finish_module_tree(module_tree)
-		local i = 1
-		while i <= #module_tree.child_names do
-			if module_trees[module_tree.child_names[i]].ancestors[module_tree.name] > 1 then
-				table.remove(module_tree.child_names, i)
-			else
-				finish_module_tree(module_trees[module_tree.child_names[i]])
-				i = i + 1
-			end
-		end
-	end
-	for _, module_name in ipairs(module_forest) do
-		finish_module_tree(module_trees[module_name])
+	for module_name, _ in pairs(modules_config) do
+		analyze_module_loads_aux(nil, module_name)
 	end
 end
 
@@ -581,6 +508,19 @@ local function serialize_graph(name)
 	serialize_edges(internal_state.graph.rightcall_edges:all())
 	f:close()
 end
+
+---@class (exact) runtest.module_execution_plan
+---@field module_name string
+---@field for_executing_module runtest.module_execution_plan.loaded_module[]
+
+---This class is essentialy an ordered dictionary entry.
+---@class (exact) runtest.module_execution_plan.loaded_module
+---@field executing_module_name string
+---@field loaded_modules runtest.module_execution_plan[]
+
+---@param module_load_analysis runtest.module_load_analysis
+---@return runtest.module_execution_plan.loaded_module[] module_execution_plan
+local function plan_module_execution(module_load_analysis) end
 
 ---@module "_meta/runtest/execute_module_forest"
 local execute_module_forest
