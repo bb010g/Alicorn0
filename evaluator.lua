@@ -2218,35 +2218,30 @@ function check_concrete(l_ctx, val, r_ctx, use, cause)
 	end
 
 	if not concrete_comparers[val_kind] then
-		error(
-			U.notail(
-				ConstraintError.new(
-					"No valid concrete type comparer found for value " .. val_kind,
-					val,
-					l_ctx,
-					nil,
-					nil,
-					nil,
-					cause
-				)
-			)
+		local err = ConstraintError.new(
+			("No valid concrete type comparer found for value %s"):format(val_kind),
+			val,
+			l_ctx,
+			nil,
+			nil,
+			nil,
+			cause
 		)
+		error(err)
 	end
 
 	if not comparer then
 		--print("kind:", valkind, " use:", usekind)
-		return false,
-			U.notail(
-				ConstraintError.new(
-					"no valid concrete comparer between value " .. val_kind .. " and usage " .. use_kind,
-					val,
-					l_ctx,
-					"compared against",
-					use,
-					r_ctx,
-					cause
-				)
-			)
+		local err = ConstraintError.new(
+			("no valid concrete comparer between value %s and usage %s"):format(tostring(val_kind), tostring(use_kind)),
+			val,
+			l_ctx,
+			"compared against",
+			use,
+			r_ctx,
+			cause
+		)
+		return false, err
 	end
 
 	error("unreachable???")
