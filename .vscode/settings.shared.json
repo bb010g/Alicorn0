@@ -1,0 +1,8 @@
+{
+    "[lua]": {
+        "editor.defaultFormatter": "JohnnyMorganz.stylua"
+    },
+    "rust-analyzer.cargo.features": [
+    ],
+    "workspaceConfigPlus.arrayMerge": "combine"
+}
