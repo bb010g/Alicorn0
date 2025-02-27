@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2025 Fundament Software SPC <https://fundament.software>
+
+[package]
+name = "uniffi-bindgen-alicorn"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+authors = ["Dusk Banks <me@bb010g.com>"]
+description = "An Alicorn bindings generator for Rust using UniFFI"
+homepage.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = []
+license.workspace = true
+
+[dependencies]
+
+[features]
+cli = []
+doc = ["cli"]
+default = []
+
+[[bin]]
+name = "uniffi-bindgen-alicorn"
+required-features = ["cli"]

@@ -3,6 +3,7 @@
 
 [workspace]
 members = [
+	"rust/crates/*",
 ]
 resolver = "2"
 
