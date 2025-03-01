@@ -14,11 +14,6 @@ extern "C-unwind" {
     fn luaopen_lfs(L: *mut mlua::lua_State) -> std::ffi::c_int;
 }
 
-pub struct Alicorn {
-    lua: Lua,
-    module: mlua::Value,
-}
-
 struct NamedChunk<'a>(&'a [u8], &'a str);
 
 impl mlua::AsChunk<'static> for NamedChunk<'static> {
@@ -29,6 +24,11 @@ impl mlua::AsChunk<'static> for NamedChunk<'static> {
     fn source(self) -> std::io::Result<std::borrow::Cow<'static, [u8]>> {
         Ok(std::borrow::Cow::Borrowed(self.0))
     }
+}
+
+pub struct Alicorn {
+    lua: Lua,
+    module: mlua::Value,
 }
 
 impl Alicorn {
