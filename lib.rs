@@ -26,42 +26,7 @@ impl mlua::AsChunk<'static> for NamedChunk<'static> {
     }
 }
 
-pub struct Alicorn {
-    lua: Lua,
-    module: mlua::Value,
-}
-
-impl Alicorn {
-    pub fn new(lua: Lua, additional_interface: mlua::Table) -> Result<Self, mlua::Error> {
-        // Load C libraries we already linked into our rust binary using our build script. This works because we can
-        // declare the C functions directly and have the linker resolve them during the link step.
-
-        let _lpeg: mlua::Value =
-            lua.load_from_function("lpeg", unsafe { lua.create_c_function(luaopen_lpeg)? })?;
-        let _: mlua::Value =
-            lua.load_from_function("lfs", unsafe { lua.create_c_function(luaopen_lfs)? })?;
-
-        lua.load(NamedChunk(SANDBOX, "sandbox")).exec()?;
-
-        let mut buf: Vec<u8> = r#"
-local injected_dep = ...
-
-package = {preload = {}, loaded = {lpeg = lpeg}}
-require = function(name) -- require stub for inside sandbox
-
-  if not package.loaded[name] then
-    if not package.preload[name] then
-      error("Couldn't find package.preload for " .. name)
-    end
-    package.loaded[name] = package.preload[name]()
-  end
-  return package.loaded[name]
-end
-
-"#
-        .into();
-        buf.extend_from_slice(ALICORN);
-        buf.extend_from_slice(r#" 
+const ALICORN_RUNNER: &'static str = r#"
 metalanguage = require "metalanguage"
 evaluator = require "evaluator"
 format = require "format-adapter"
@@ -176,7 +141,44 @@ function M.alc_execute_file(filename)
 end
 
 return M
-        "#.as_bytes());
+"#;
+
+pub struct Alicorn {
+    lua: Lua,
+    module: mlua::Value,
+}
+
+impl Alicorn {
+    pub fn new(lua: Lua, additional_interface: mlua::Table) -> Result<Self, mlua::Error> {
+        // Load C libraries we already linked into our rust binary using our build script. This works because we can
+        // declare the C functions directly and have the linker resolve them during the link step.
+
+        let _lpeg: mlua::Value =
+            lua.load_from_function("lpeg", unsafe { lua.create_c_function(luaopen_lpeg)? })?;
+        let _: mlua::Value =
+            lua.load_from_function("lfs", unsafe { lua.create_c_function(luaopen_lfs)? })?;
+
+        lua.load(NamedChunk(SANDBOX, "sandbox")).exec()?;
+
+        let mut buf: Vec<u8> = r#"
+local injected_dep = ...
+
+package = {preload = {}, loaded = {lpeg = lpeg}}
+require = function(name) -- require stub for inside sandbox
+
+  if not package.loaded[name] then
+    if not package.preload[name] then
+      error("Couldn't find package.preload for " .. name)
+    end
+    package.loaded[name] = package.preload[name]()
+  end
+  return package.loaded[name]
+end
+
+"#
+        .into();
+        buf.extend_from_slice(ALICORN);
+        buf.extend_from_slice(ALICORN_RUNNER.as_bytes());
 
         lua.load(LUA_INIT).exec()?;
         lua.load(
